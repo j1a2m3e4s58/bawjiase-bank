@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Button } from "../components/BankButton";
 import { Modal } from "../components/BankModal";
 
-// ─── Register Modal ────────────────────────────────────────────────────────────
 function RegisterModal({
   isOpen,
   onClose,
@@ -24,7 +23,7 @@ function RegisterModal({
     const e: Record<string, string> = {};
     if (!fullName.trim()) e.fullName = "Full name is required";
     if (!phone.trim()) e.phone = "Phone number is required";
-    if (pin.length < 4) e.pin = "PIN must be at least 4 digits";
+    if (pin.length < 4) e.pin = "Demo PIN must be at least 4 digits";
     if (pin !== confirmPin) e.confirmPin = "PINs do not match";
     return e;
   }
@@ -38,7 +37,7 @@ function RegisterModal({
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1200));
     setLoading(false);
-    toast.success("Account created! You can now sign in.");
+    toast.success("Demo profile created. You can now enter the demo.");
     setFullName("");
     setPhone("");
     setPin("");
@@ -51,8 +50,8 @@ function RegisterModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create Account"
-      description="Open your Bawjiase Community Bank account today"
+      title="Create Demo Profile"
+      description="Set up a test profile for the BCB demo experience"
       data-ocid="register.dialog"
     >
       <div className="space-y-4">
@@ -89,7 +88,7 @@ function RegisterModal({
             htmlFor="reg-phone"
             className="block text-xs font-medium text-muted-foreground mb-1.5"
           >
-            Phone Number
+            Test Phone Number
           </label>
           <input
             id="reg-phone"
@@ -117,7 +116,7 @@ function RegisterModal({
             htmlFor="reg-pin"
             className="block text-xs font-medium text-muted-foreground mb-1.5"
           >
-            PIN (4–6 digits)
+            Demo PIN
           </label>
           <input
             id="reg-pin"
@@ -129,7 +128,7 @@ function RegisterModal({
               setPin(e.target.value);
               setErrors((p) => ({ ...p, pin: "" }));
             }}
-            placeholder="••••"
+            placeholder="1234"
             className="w-full rounded-xl bg-muted/40 border border-border px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring tracking-widest"
             data-ocid="register.pin_input"
           />
@@ -147,7 +146,7 @@ function RegisterModal({
             htmlFor="reg-confirm-pin"
             className="block text-xs font-medium text-muted-foreground mb-1.5"
           >
-            Confirm PIN
+            Confirm Demo PIN
           </label>
           <input
             id="reg-confirm-pin"
@@ -159,7 +158,7 @@ function RegisterModal({
               setConfirmPin(e.target.value);
               setErrors((p) => ({ ...p, confirmPin: "" }));
             }}
-            placeholder="••••"
+            placeholder="1234"
             className="w-full rounded-xl bg-muted/40 border border-border px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring tracking-widest"
             data-ocid="register.confirm_pin_input"
           />
@@ -180,24 +179,16 @@ function RegisterModal({
           onClick={handleSubmit}
           data-ocid="register.submit_button"
         >
-          Create Account
+          Create Demo Profile
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          By registering you agree to our{" "}
-          <button
-            type="button"
-            className="text-primary hover:underline"
-            onClick={() => toast.info("Terms of Service coming soon")}
-          >
-            Terms of Service
-          </button>
+          This profile is only for demo walkthroughs and testing.
         </p>
       </div>
     </Modal>
   );
 }
 
-// ─── Forgot Password Modal ─────────────────────────────────────────────────────
 function ForgotPasswordModal({
   isOpen,
   onClose,
@@ -211,7 +202,7 @@ function ForgotPasswordModal({
 
   async function handleSend() {
     if (!phone.trim()) {
-      toast.error("Please enter your phone number");
+      toast.error("Please enter a demo phone number");
       return;
     }
     setLoading(true);
@@ -230,8 +221,8 @@ function ForgotPasswordModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Forgot Password"
-      description="We'll send a reset link to your registered phone number"
+      title="Demo Help"
+      description="Use any sample phone number to access the demo experience"
       data-ocid="forgot_password.dialog"
     >
       {sent ? (
@@ -241,11 +232,10 @@ function ForgotPasswordModal({
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">
-              Reset link sent!
+              Demo tip ready
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Check your SMS for the password reset link. It expires in 10
-              minutes.
+              Any sample phone number will let you continue into the demo.
             </p>
           </div>
           <Button
@@ -265,7 +255,7 @@ function ForgotPasswordModal({
               htmlFor="forgot-phone"
               className="block text-xs font-medium text-muted-foreground mb-1.5"
             >
-              Phone Number
+              Demo Phone Number
             </label>
             <input
               id="forgot-phone"
@@ -285,7 +275,7 @@ function ForgotPasswordModal({
             onClick={handleSend}
             data-ocid="forgot_password.send_button"
           >
-            Send Reset Link
+            Show Demo Tip
           </Button>
           <Button
             variant="ghost"
@@ -302,7 +292,6 @@ function ForgotPasswordModal({
   );
 }
 
-// ─── Main Login Page ───────────────────────────────────────────────────────────
 export default function LoginPage() {
   const navigate = useNavigate();
 
@@ -313,16 +302,14 @@ export default function LoginPage() {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
 
-  // TESTING MODE: accepts any phone number
   async function handleLogin() {
     if (!phone.trim()) {
-      setPhoneError("Please enter your phone number");
+      setPhoneError("Please enter a sample phone number");
       return;
     }
     setPhoneError("");
     setLoading(true);
     await new Promise((r) => setTimeout(r, 900));
-    // Store mock auth
     localStorage.setItem("bcb_auth_phone", phone.trim());
     setLoading(false);
     navigate({ to: "/dashboard" });
@@ -335,7 +322,6 @@ export default function LoginPage() {
   return (
     <>
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Background ambient glow */}
         <div
           className="absolute inset-0 pointer-events-none"
           aria-hidden="true"
@@ -346,12 +332,19 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 w-full max-w-sm animate-scale-in">
-          {/* Main card */}
+          <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300">
+              Demo Build
+            </p>
+            <p className="mt-2 text-sm text-amber-100/90">
+              This prototype is for testing and presentation only. Do not enter
+              real banking details.
+            </p>
+          </div>
+
           <div className="glass-dark rounded-3xl border border-white/10 p-8 shadow-elevated space-y-7">
-            {/* Logo & Bank Name */}
             <div className="flex flex-col items-center gap-4 text-center">
               <div className="relative flex items-center justify-center">
-                {/* Glow ring behind logo */}
                 <div
                   className="absolute rounded-full"
                   style={{
@@ -364,44 +357,41 @@ export default function LoginPage() {
                 />
                 <img
                   src="/assets/images/bcb-logo.png"
-                  alt="Bawjiase Community Bank PLC"
+                  alt="Bawjiase Community Bank PLC Demo"
                   className="relative z-10 drop-shadow-[0_0_18px_oklch(0.72_0.21_150_/_0.45)]"
                   style={{ width: 96, height: 96, objectFit: "contain" }}
                 />
               </div>
               <div>
                 <h1 className="font-display font-bold text-xl text-foreground leading-tight">
-                  Bawjiase Community Bank
+                  Bawjiase Community Bank Demo
                 </h1>
                 <p className="text-sm font-semibold tracking-widest uppercase mt-0.5 text-primary">
                   PLC
                 </p>
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  Your trusted banking partner
+                  Demo banking experience for review and testing
                 </p>
               </div>
             </div>
 
-            {/* Divider */}
             <div className="h-px bg-border/50" />
 
-            {/* Sign In heading */}
             <div className="text-center">
               <h2 className="font-display font-semibold text-base text-foreground">
-                Sign In to Your Account
+                Continue to Demo
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Enter your phone number to continue
+                Use any sample phone number to explore the app
               </p>
             </div>
 
-            {/* Phone input */}
             <div className="space-y-2">
               <label
                 htmlFor="login-phone"
                 className="block text-xs font-medium text-muted-foreground"
               >
-                Phone Number
+                Test Phone Number
               </label>
               <div className="relative">
                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -414,7 +404,7 @@ export default function LoginPage() {
                     setPhoneError("");
                   }}
                   onKeyDown={handleKeyDown}
-                  placeholder="Enter your phone number"
+                  placeholder="Enter any sample number"
                   className="w-full rounded-xl bg-muted/40 border border-border pl-10 pr-10 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/50 transition-smooth"
                   data-ocid="login.phone_input"
                 />
@@ -440,9 +430,12 @@ export default function LoginPage() {
                   {phoneError}
                 </p>
               )}
+              <p className="text-[11px] text-muted-foreground">
+                Example demo number:{" "}
+                <span className="font-mono">0550001234</span>
+              </p>
             </div>
 
-            {/* Sign In button */}
             <Button
               variant="primary"
               size="lg"
@@ -451,10 +444,9 @@ export default function LoginPage() {
               loading={loading}
               data-ocid="login.submit_button"
             >
-              {loading ? "Signing in…" : "Sign In"}
+              {loading ? "Opening demo..." : "Enter Demo"}
             </Button>
 
-            {/* Forgot password link */}
             <div className="text-center">
               <button
                 type="button"
@@ -462,14 +454,15 @@ export default function LoginPage() {
                 className="text-xs text-primary hover:text-primary/80 transition-smooth underline-offset-2 hover:underline"
                 data-ocid="login.forgot_password_link"
               >
-                Forgot Password?
+                Demo Help
               </button>
             </div>
 
-            {/* Divider + Register */}
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-border/50" />
-              <span className="text-xs text-muted-foreground">New to BCB?</span>
+              <span className="text-xs text-muted-foreground">
+                Want to try the demo setup?
+              </span>
               <div className="flex-1 h-px bg-border/50" />
             </div>
 
@@ -480,13 +473,13 @@ export default function LoginPage() {
               onClick={() => setRegisterOpen(true)}
               data-ocid="login.register_button"
             >
-              Create Account
+              Create Demo Profile
             </Button>
           </div>
 
-          {/* Footer */}
           <p className="mt-5 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Bawjiase Community Bank PLC.{" "}
+            Demo prototype for presentation and internal testing. Copyright{" "}
+            {new Date().getFullYear()} Bawjiase Community Bank PLC.{" "}
             <a
               href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
               target="_blank"
@@ -499,7 +492,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Modals */}
       <RegisterModal
         isOpen={registerOpen}
         onClose={() => setRegisterOpen(false)}

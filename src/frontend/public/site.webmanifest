@@ -1,7 +1,7 @@
 {
-  "name": "Bawjiase Community Bank",
-  "short_name": "BCB",
-  "description": "Secure digital banking for Ghana.",
+  "name": "BCB Demo",
+  "short_name": "BCB Demo",
+  "description": "Demo banking prototype for testing and presentation.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
