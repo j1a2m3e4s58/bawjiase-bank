@@ -27,7 +27,7 @@ import {
   User,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AccountType } from "../backend";
 import { Badge } from "../components/BankBadge";
@@ -47,6 +47,7 @@ import {
   maskAccountNumber,
 } from "../lib/formatters";
 import { sampleAccounts } from "../lib/sampleData";
+import { applyTheme, getStoredTheme, type ThemeMode } from "../lib/theme";
 
 // ─── Toggle Switch ────────────────────────────────────────────────────────────
 function Toggle({
@@ -449,11 +450,18 @@ export default function SettingsPage() {
   // App preferences
   const [language, setLanguage] = useState("en");
   const [currency, setCurrency] = useState("GHS");
+  const [theme, setTheme] = useState<ThemeMode>("dark");
 
   const displayAccounts = accounts?.length ? accounts : sampleAccounts;
   // TESTING MODE: display masked phone as identity
   const truncatedPhone =
     phone.length > 7 ? `${phone.slice(0, 4)}****${phone.slice(-3)}` : phone;
+
+  useEffect(() => {
+    const savedTheme = getStoredTheme();
+    setTheme(savedTheme);
+    applyTheme(savedTheme);
+  }, []);
 
   function copyPhone() {
     navigator.clipboard.writeText(phone);
@@ -481,7 +489,10 @@ export default function SettingsPage() {
   }
 
   function handleThemeToggle() {
-    toast.info("Light mode coming soon");
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
+    toast.success(`Switched to ${nextTheme} mode`);
   }
 
   // ── Sidebar: profile card ──
@@ -954,11 +965,11 @@ export default function SettingsPage() {
                           Theme
                         </p>
                         <Badge variant="muted" size="sm">
-                          Dark
+                          {theme === "dark" ? "Dark" : "Light"}
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Light mode coming soon
+                        Choose how the app looks on this device
                       </p>
                     </div>
                     <button
@@ -967,7 +978,7 @@ export default function SettingsPage() {
                       className="text-xs font-medium text-muted-foreground bg-muted/40 border border-border rounded-lg px-3 py-1 hover:bg-muted transition-smooth"
                       data-ocid="settings.theme_toggle"
                     >
-                      Dark
+                      {theme === "dark" ? "Switch to Light" : "Switch to Dark"}
                     </button>
                   </div>
                 </CardContent>

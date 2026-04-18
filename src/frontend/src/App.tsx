@@ -5,10 +5,11 @@ import {
   createRoute,
   redirect,
 } from "@tanstack/react-router";
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { LoadingPage } from "./components/BankLoading";
 import SplashScreen from "./components/SplashScreen";
 import { Layout } from "./components/layout/Layout";
+import { initializeTheme } from "./lib/theme";
 import LoginPage from "./pages/LoginPage";
 
 // Lazy-loaded pages
@@ -123,6 +124,10 @@ declare module "@tanstack/react-router" {
 export default function App() {
   // Show splash screen only once per app load
   const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    initializeTheme();
+  }, []);
 
   return (
     <>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "bcb-app-v1";
+const CACHE_NAME = "bcb-app-v2";
 const APP_SHELL = [
   "/",
   "/site.webmanifest",
