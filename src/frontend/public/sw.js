@@ -1,4 +1,4 @@
-const CACHE_NAME = "bcb-app-v2";
+const CACHE_NAME = "bcb-app-v3";
 const APP_SHELL = [
   "/",
   "/site.webmanifest",
@@ -11,7 +11,15 @@ const APP_SHELL = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)),
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(
+        APP_SHELL.map((url) =>
+          cache.add(url).catch((error) => {
+            console.warn("Unable to cache app shell asset", url, error);
+          }),
+        ),
+      ),
+    ),
   );
   self.skipWaiting();
 });
@@ -30,30 +38,37 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") {
+  const url = new URL(event.request.url);
+  if (event.request.method !== "GET" || url.origin !== self.location.origin) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200) {
+          return networkResponse;
+        }
 
-      return fetch(event.request)
-        .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200) {
-            return networkResponse;
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
+
+        return networkResponse;
+      })
+      .catch(() =>
+        caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
           }
 
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          if (event.request.mode === "navigate") {
+            return caches.match("/");
+          }
 
-          return networkResponse;
-        })
-        .catch(() => caches.match("/"));
-    }),
+          return Response.error();
+        }),
+      ),
   );
 });
