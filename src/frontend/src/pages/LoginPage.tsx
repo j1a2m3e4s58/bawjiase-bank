@@ -295,28 +295,16 @@ function ForgotPasswordModal({
 export default function LoginPage() {
   const navigate = useNavigate();
 
-  const [phone, setPhone] = useState("");
-  const [showPhone, setShowPhone] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [phoneError, setPhoneError] = useState("");
   const [registerOpen, setRegisterOpen] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
 
-  async function handleLogin() {
-    if (!phone.trim()) {
-      setPhoneError("Please enter a sample phone number");
-      return;
-    }
-    setPhoneError("");
+  async function handleEnterDemo() {
     setLoading(true);
     await new Promise((r) => setTimeout(r, 900));
-    localStorage.setItem("bcb_auth_phone", phone.trim());
+    localStorage.setItem("bcb_auth_phone", "0550001234");
     setLoading(false);
     navigate({ to: "/dashboard" });
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") handleLogin();
   }
 
   return (
@@ -382,57 +370,20 @@ export default function LoginPage() {
                 Continue to Demo
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Use any sample phone number to explore the app
+                Launch the sample banking experience with preloaded test data
               </p>
             </div>
 
-            <div className="space-y-2">
-              <label
-                htmlFor="login-phone"
-                className="block text-xs font-medium text-muted-foreground"
-              >
-                Test Phone Number
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                <input
-                  id="login-phone"
-                  type={showPhone ? "text" : "tel"}
-                  value={phone}
-                  onChange={(e) => {
-                    setPhone(e.target.value);
-                    setPhoneError("");
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Enter any sample number"
-                  className="w-full rounded-xl bg-muted/40 border border-border pl-10 pr-10 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary/50 transition-smooth"
-                  data-ocid="login.phone_input"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPhone((p) => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-smooth p-1"
-                  aria-label={showPhone ? "Hide number" : "Show number"}
-                  data-ocid="login.toggle_phone_visibility"
-                >
-                  {showPhone ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              {phoneError && (
-                <p
-                  className="text-xs text-destructive"
-                  data-ocid="login.phone_field_error"
-                >
-                  {phoneError}
-                </p>
-              )}
-              <p className="text-[11px] text-muted-foreground">
-                Example demo number:{" "}
-                <span className="font-mono">0550001234</span>
+            <div className="rounded-2xl border border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">Sample session</p>
+              <p className="mt-1">
+                Demo user: <span className="font-mono text-foreground">Kwame Mensah</span>
+              </p>
+              <p className="mt-1">
+                Test phone: <span className="font-mono text-foreground">0550001234</span>
+              </p>
+              <p className="mt-2 text-xs">
+                No real credentials are required for this prototype.
               </p>
             </div>
 
@@ -440,7 +391,7 @@ export default function LoginPage() {
               variant="primary"
               size="lg"
               className="w-full glow-emerald-subtle"
-              onClick={handleLogin}
+              onClick={handleEnterDemo}
               loading={loading}
               data-ocid="login.submit_button"
             >

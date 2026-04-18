@@ -22,6 +22,10 @@ export function Layout({ children }: LayoutProps) {
         id="main-content"
       >
         <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto w-full animate-fade-in">
+          <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+            Demo environment only. This app is for testing and presentation,
+            not live banking. Do not enter real account or payment details.
+          </div>
           {children}
         </div>
       </main>
