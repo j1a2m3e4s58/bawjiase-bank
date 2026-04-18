@@ -1,0 +1,25 @@
+{
+  "overview": "Bawjiase Community Bank PLC — a premium mobile banking web app with full account management, fund transfers, transaction history, notifications, and a sleek dark emerald design for both desktop and mobile.",
+  "features": [
+    "Internet Identity login with protected routes",
+    "Dashboard with account balance overview and quick actions",
+    "Full transaction history with detail receipts",
+    "Step-by-step fund transfer flow",
+    "In-app notification center with read/dismiss",
+    "Profile and settings management",
+    "Premium dark theme with emerald/green brand colors",
+    "Glassmorphism cards with neon glow effects",
+    "Fully responsive for mobile and desktop"
+  ],
+  "category": "finance",
+  "tags": [
+    "banking",
+    "fintech",
+    "mobile-banking",
+    "dark-theme",
+    "emerald",
+    "glassmorphism",
+    "responsive"
+  ],
+  "last_updated": "2026-04-18T11:22:01.134Z"
+}

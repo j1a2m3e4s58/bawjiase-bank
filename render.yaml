@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: bawjiase-bank
+    env: static
+    buildCommand: npm install -g pnpm && pnpm install --frozen-lockfile && pnpm --dir src/frontend build
+    staticPublishPath: src/frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
