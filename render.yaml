@@ -2,7 +2,7 @@ services:
   - type: web
     name: bawjiase-bank
     env: static
-    buildCommand: npm install -g pnpm && pnpm install --frozen-lockfile && pnpm --dir src/frontend build
+    buildCommand: corepack enable && corepack prepare pnpm@10.11.1 --activate && pnpm install --frozen-lockfile && pnpm --dir src/frontend build
     staticPublishPath: src/frontend/dist
     routes:
       - type: rewrite
