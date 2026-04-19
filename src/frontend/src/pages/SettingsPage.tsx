@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Copy,
   CreditCard,
+  Download,
   ExternalLink,
   FileText,
   Globe,
@@ -48,6 +49,11 @@ import {
 } from "../lib/formatters";
 import { sampleAccounts } from "../lib/sampleData";
 import { applyTheme, getStoredTheme, type ThemeMode } from "../lib/theme";
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
 
 // ─── Toggle Switch ────────────────────────────────────────────────────────────
 function Toggle({
@@ -168,7 +174,7 @@ function ChangePinModal({
               setCurrent(e.target.value);
               setErrors((p) => ({ ...p, current: undefined }));
             }}
-            placeholder="••••"
+            placeholder="����"
             className="w-full rounded-xl bg-muted/40 border border-border px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring tracking-widest"
             data-ocid="change_pin.current_input"
           />
@@ -198,7 +204,7 @@ function ChangePinModal({
               setNext(e.target.value);
               setErrors((p) => ({ ...p, next: undefined }));
             }}
-            placeholder="••••"
+            placeholder="����"
             className="w-full rounded-xl bg-muted/40 border border-border px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring tracking-widest"
             data-ocid="change_pin.new_input"
           />
@@ -228,7 +234,7 @@ function ChangePinModal({
               setConfirm(e.target.value);
               setErrors((p) => ({ ...p, confirm: undefined }));
             }}
-            placeholder="••••"
+            placeholder="����"
             className="w-full rounded-xl bg-muted/40 border border-border px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring tracking-widest"
             data-ocid="change_pin.confirm_input"
           />
@@ -288,7 +294,7 @@ function ContactSupportModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Contact Support"
-      description="Our team is available Mon–Fri, 8am–6pm GMT"
+      description="Our team is available Mon-Fri, 8am-6pm GMT"
       data-ocid="support.dialog"
     >
       <div className="space-y-4">
@@ -321,7 +327,7 @@ function ContactSupportModal({
             rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Describe your issue in detail…"
+            placeholder="Describe your issue in detail..."
             className="w-full rounded-xl bg-muted/40 border border-border px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             data-ocid="support.message_textarea"
           />
@@ -366,7 +372,7 @@ function CloseAccountModal({
           <p className="text-xs text-destructive">
             Closing your account will permanently delete all data, cancel all
             scheduled transfers, and any remaining balance will be returned
-            within 5–7 business days.
+            within 5-7 business days.
           </p>
         </div>
         <div>
@@ -451,6 +457,9 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState("en");
   const [currency, setCurrency] = useState("GHS");
   const [theme, setTheme] = useState<ThemeMode>("dark");
+  const [installPrompt, setInstallPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   const displayAccounts = accounts?.length ? accounts : sampleAccounts;
   // TESTING MODE: display masked phone as identity
@@ -461,6 +470,38 @@ export default function SettingsPage() {
     const savedTheme = getStoredTheme();
     setTheme(savedTheme);
     applyTheme(savedTheme);
+  }, []);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      ("standalone" in window.navigator &&
+        Boolean(
+          (window.navigator as Navigator & { standalone?: boolean }).standalone,
+        ));
+    setIsInstalled(standalone);
+
+    function handleBeforeInstallPrompt(event: Event) {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    }
+
+    function handleInstalled() {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+      toast.success("BCB Demo installed successfully");
+    }
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleInstalled);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
   }, []);
 
   function copyPhone() {
@@ -493,6 +534,30 @@ export default function SettingsPage() {
     setTheme(nextTheme);
     applyTheme(nextTheme);
     toast.success(`Switched to ${nextTheme} mode`);
+  }
+
+  async function handleInstallApp() {
+    if (isInstalled) {
+      toast.info("The app is already installed on this device.");
+      return;
+    }
+
+    if (!installPrompt) {
+      toast.info(
+        "Chrome is not ready to install yet. Refresh once after deployment, then open this Settings page again.",
+      );
+      return;
+    }
+
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    setInstallPrompt(null);
+
+    if (choice.outcome === "accepted") {
+      toast.success("Installing BCB Demo...");
+    } else {
+      toast.info("Installation was cancelled.");
+    }
   }
 
   // ── Sidebar: profile card ──
@@ -646,7 +711,7 @@ export default function SettingsPage() {
                           {acc.accountType} Account
                         </p>
                         <p className="text-xs text-muted-foreground font-mono">
-                          {maskAccountNumber(acc.accountNumber)} · Since{" "}
+                          {maskAccountNumber(acc.accountNumber)} - Since{" "}
                           {formatDate(acc.createdAt)}
                         </p>
                       </div>
@@ -805,7 +870,7 @@ export default function SettingsPage() {
                             <MapPin className="h-3 w-3" /> Accra, Ghana
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Active now · This device
+                            Active now - This device
                           </p>
                         </div>
                         <Button
@@ -925,7 +990,7 @@ export default function SettingsPage() {
                     >
                       <option value="en">English</option>
                       <option value="tw">Twi</option>
-                      <option value="fr">Français</option>
+                      <option value="fr">Francais</option>
                     </select>
                   </div>
 
@@ -948,9 +1013,9 @@ export default function SettingsPage() {
                       className="text-xs font-medium text-foreground bg-muted/40 border border-border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring"
                       data-ocid="settings.currency_select"
                     >
-                      <option value="GHS">GH₵ Cedi</option>
+                      <option value="GHS">GHGHS Cedi</option>
                       <option value="USD">$ Dollar</option>
-                      <option value="EUR">€ Euro</option>
+                      <option value="EUR">EUR Euro</option>
                     </select>
                   </div>
 
@@ -981,6 +1046,35 @@ export default function SettingsPage() {
                       {theme === "dark" ? "Switch to Light" : "Switch to Dark"}
                     </button>
                   </div>
+
+                  <div className="h-px bg-border/50 mx-3" />
+
+                  {/* Install app */}
+                  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/30 transition-smooth">
+                    <Download className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-medium text-foreground">
+                          Install App
+                        </p>
+                        <Badge variant={isInstalled ? "success" : "muted"} size="sm">
+                          {isInstalled ? "Installed" : "PWA"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Add BCB Demo as a standalone app on this phone
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleInstallApp}
+                      className="text-xs font-medium text-muted-foreground bg-muted/40 border border-border rounded-lg px-3 py-1 hover:bg-muted transition-smooth disabled:opacity-60"
+                      disabled={isInstalled}
+                      data-ocid="settings.install_app_button"
+                    >
+                      {isInstalled ? "Installed" : "Install"}
+                    </button>
+                  </div>
                 </CardContent>
               </Card>
             </Section>
@@ -995,7 +1089,7 @@ export default function SettingsPage() {
                         icon: HelpCircle,
                         label: "Help Center",
                         desc: "FAQs and how-to guides",
-                        action: () => toast.info("Opening Help Center…"),
+                        action: () => toast.info("Opening Help Center..."),
                         badge: null,
                         external: true,
                         ocid: "settings.help_center_button",
@@ -1023,7 +1117,7 @@ export default function SettingsPage() {
                         icon: FileText,
                         label: "Privacy Policy",
                         desc: "How we handle your data",
-                        action: () => toast.info("Opening Privacy Policy…"),
+                        action: () => toast.info("Opening Privacy Policy..."),
                         badge: null,
                         external: true,
                         ocid: "settings.privacy_policy_button",
@@ -1032,7 +1126,7 @@ export default function SettingsPage() {
                         icon: FileText,
                         label: "Terms of Service",
                         desc: "Usage terms and conditions",
-                        action: () => toast.info("Opening Terms of Service…"),
+                        action: () => toast.info("Opening Terms of Service..."),
                         badge: null,
                         external: true,
                         ocid: "settings.terms_button",

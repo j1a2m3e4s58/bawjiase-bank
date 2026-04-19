@@ -50,7 +50,7 @@ const extraNotifications: NotificationView[] = [
     notifType: NotificationType.TransferConfirmation,
     title: "Transfer Confirmed",
     message:
-      "GH₵ 500.00 successfully sent to Ama Mensah (BCB-007-2024-0218). Reference: REF-2024-TXN-887.",
+      "GHGHS 500.00 successfully sent to Ama Mensah (BCB-007-2024-0218). Reference: REF-2024-TXN-887.",
     isRead: false,
     timestamp: NOW - HOUR * 3n,
   },
@@ -60,7 +60,7 @@ const extraNotifications: NotificationView[] = [
     notifType: NotificationType.AccountActivity,
     title: "Low Balance Warning",
     message:
-      "Your checking account balance has fallen below GH₵ 1,000.00. Current balance: GH₵ 842.30.",
+      "Your checking account balance has fallen below GHGHS 1,000.00. Current balance: GHGHS 842.30.",
     isRead: true,
     timestamp: NOW - HOUR * 8n,
   },
@@ -80,7 +80,7 @@ const extraNotifications: NotificationView[] = [
     notifType: NotificationType.AccountActivity,
     title: "ATM Withdrawal",
     message:
-      "GH₵ 200.00 withdrawn at Bawjiase BCB ATM #014, Accra Central. Available balance: GH₵ 1,042.30.",
+      "GHGHS 200.00 withdrawn at Bawjiase BCB ATM #014, Accra Central. Available balance: GHGHS 1,042.30.",
     isRead: true,
     timestamp: NOW - DAY * 2n,
   },
@@ -90,7 +90,7 @@ const extraNotifications: NotificationView[] = [
     notifType: NotificationType.TransferConfirmation,
     title: "Salary Deposited",
     message:
-      "GH₵ 3,500.00 salary payment received from Accra Digital Solutions Ltd. Your account has been credited.",
+      "GHGHS 3,500.00 salary payment received from Accra Digital Solutions Ltd. Your account has been credited.",
     isRead: false,
     timestamp: NOW - DAY * 3n,
   },

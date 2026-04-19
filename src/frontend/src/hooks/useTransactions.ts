@@ -2,6 +2,7 @@ import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { createActor } from "../backend";
+import { createMockTransfer, getMockBankState } from "../lib/mockBank";
 import { useAppStore } from "../store/useAppStore";
 import type {
   Transaction,
@@ -22,10 +23,22 @@ export function useTransactions(
     queryKey: ["transactions", accountId?.toString(), offset.toString()],
     queryFn: async () => {
       if (!actor || !accountId)
-        return { transactions: [], total: 0n, hasMore: false };
+        return {
+          transactions: getMockBankState().transactions,
+          total: BigInt(getMockBankState().transactions.length),
+          hasMore: false,
+        };
       return actor.getTransactions(accountId, offset, limit);
     },
-    enabled: !!actor && !isFetching && accountId !== null,
+    enabled: !isFetching && accountId !== null,
+    initialData: () => {
+      const transactions = getMockBankState().transactions;
+      return {
+        transactions,
+        total: BigInt(transactions.length),
+        hasMore: false,
+      };
+    },
   });
 
   useEffect(() => {
@@ -53,10 +66,21 @@ export function useTransfer() {
 
   return useMutation<TransferResult, Error, TransferRequest>({
     mutationFn: async (req: TransferRequest) => {
-      if (!actor) throw new Error("Actor not ready");
+      if (!actor) return createMockTransfer(req);
       return actor.transfer(req);
     },
     onSuccess: () => {
+      if (!actor) {
+        const state = getMockBankState();
+        queryClient.setQueryData(["accounts"], state.accounts);
+        queryClient.setQueryData(["notifications"], state.notifications);
+        queryClient.setQueriesData({ queryKey: ["transactions"] }, () => ({
+          transactions: state.transactions,
+          total: BigInt(state.transactions.length),
+          hasMore: false,
+        }));
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });

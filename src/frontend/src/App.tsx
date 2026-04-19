@@ -19,7 +19,7 @@ const TransfersPage = lazy(() => import("./pages/TransfersPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
-// TESTING MODE: accepts any phone number stored in localStorage
+// TESTING MODE: accepts any phone number stored in localStorage.
 function requireAuth() {
   const hasAuth =
     typeof window !== "undefined" && !!localStorage.getItem("bcb_auth_phone");
@@ -28,7 +28,6 @@ function requireAuth() {
   }
 }
 
-// Root route
 const rootRoute = createRootRoute({
   component: RootComponent,
 });
@@ -37,14 +36,12 @@ function RootComponent() {
   return <Outlet />;
 }
 
-// Login route
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: LoginPage,
 });
 
-// Protected layout route
 const protectedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "protected",
@@ -53,11 +50,12 @@ const protectedRoute = createRoute({
 });
 
 function ProtectedLayout() {
-  // TESTING MODE: no real identity check needed — mock phone auth
+  // TESTING MODE: no real identity check needed - mock phone auth.
   const phone = localStorage.getItem("bcb_auth_phone");
   if (!phone) {
-    return <LoadingPage label="Connecting…" />;
+    return <LoadingPage label="Connecting..." />;
   }
+
   return (
     <Layout>
       <Suspense fallback={<LoadingPage />}>
@@ -67,35 +65,30 @@ function ProtectedLayout() {
   );
 }
 
-// Dashboard
 const dashboardRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: "/dashboard",
   component: DashboardPage,
 });
 
-// Transactions
 const transactionsRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: "/transactions",
   component: TransactionsPage,
 });
 
-// Transfers
 const transfersRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: "/transfers",
   component: TransfersPage,
 });
 
-// Notifications
 const notificationsRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: "/notifications",
   component: NotificationsPage,
 });
 
-// Settings
 const settingsRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: "/settings",
@@ -122,7 +115,6 @@ declare module "@tanstack/react-router" {
 }
 
 export default function App() {
-  // Show splash screen only once per app load
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {

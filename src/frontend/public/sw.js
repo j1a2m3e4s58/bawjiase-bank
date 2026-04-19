@@ -1,4 +1,4 @@
-const CACHE_NAME = "bcb-app-v3";
+const CACHE_NAME = "bcb-app-v4";
 const APP_SHELL = [
   "/",
   "/site.webmanifest",
@@ -46,6 +46,10 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
+        if (event.request.mode === "navigate" && networkResponse.status === 404) {
+          return caches.match("/").then((cachedResponse) => cachedResponse || networkResponse);
+        }
+
         if (!networkResponse || networkResponse.status !== 200) {
           return networkResponse;
         }

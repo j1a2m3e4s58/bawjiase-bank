@@ -12,11 +12,15 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { AccountType } from "../backend";
 import { Button } from "../components/BankButton";
 import { Card, CardContent } from "../components/BankCard";
 import { PageHeader } from "../components/layout/PageHeader";
+import { useAccounts } from "../hooks/useAccounts";
+import { useTransfer } from "../hooks/useTransactions";
 import { formatCurrency } from "../lib/formatters";
 import { sampleAccounts } from "../lib/sampleData";
+import type { Transaction } from "../types";
 
 // ─── Sample contacts ──────────────────────────────────────────────────────────
 interface Contact {
@@ -154,32 +158,39 @@ type StepKey = 0 | 1 | 2 | 3;
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function TransfersPage() {
   const navigate = useNavigate();
+  const { data: accounts } = useAccounts();
+  const transfer = useTransfer();
+  const displayAccounts = accounts?.length ? accounts : sampleAccounts;
   const checkingAccount =
-    sampleAccounts.find((a) => a.accountType === "Checking") ??
-    sampleAccounts[0];
+    displayAccounts.find((a) => a.accountType === AccountType.Checking) ??
+    displayAccounts[0];
   const availableBalance = checkingAccount?.balance ?? 0n;
 
   // Step state
   const [step, setStep] = useState<StepKey>(0);
   const [direction, setDirection] = useState(1);
 
-  // Step 1 – recipient
+  // Step 1 - recipient
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [manualMode, setManualMode] = useState(false);
   const [manualName, setManualName] = useState("");
   const [manualAccount, setManualAccount] = useState("");
   const [recipientError, setRecipientError] = useState("");
 
-  // Step 2 – amount
+  // Step 2 - amount
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [amountError, setAmountError] = useState("");
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState("");
 
-  // Step 4 – success
+  // Step 4 - success
   const [referenceNumber] = useState(
     () => `REF-${Date.now().toString(36).toUpperCase()}`,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmedTransaction, setConfirmedTransaction] =
+    useState<Transaction | null>(null);
 
   const amountNum = Number.parseFloat(amount);
   const amountBigInt =
@@ -249,11 +260,42 @@ export default function TransfersPage() {
 
   // ── Step 3 confirm ─────────────────────────────────────────────────────────
   async function handleConfirm() {
+    setPinError("");
+    if (!/^\d{4,6}$/.test(pin)) {
+      setPinError("Enter a 4 to 6 digit demo PIN to confirm.");
+      return;
+    }
+
+    if (!checkingAccount || !recipient) {
+      toast.error("Transfer details are incomplete.");
+      return;
+    }
+
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setIsSubmitting(false);
-    setDirection(1);
-    setStep(3);
+    try {
+      const fallbackRecipientId =
+        recipient.id === "manual"
+          ? [...recipient.accountNumber].reduce(
+              (sum, char) => sum + char.charCodeAt(0),
+              0,
+            )
+          : Number.parseInt(recipient.id.replace(/\D/g, ""), 10) + 10;
+      const result = await transfer.mutateAsync({
+        fromAccountId: checkingAccount.accountId,
+        toAccountId: BigInt(fallbackRecipientId || 99),
+        amount: amountBigInt,
+        description: description || `Transfer to ${recipient.name}`,
+      });
+      setConfirmedTransaction(result.transaction);
+      setDirection(1);
+      setStep(3);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Unable to complete transfer.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   // ── Reset ──────────────────────────────────────────────────────────────────
@@ -266,8 +308,11 @@ export default function TransfersPage() {
     setManualAccount("");
     setAmount("");
     setDescription("");
+    setPin("");
     setAmountError("");
     setRecipientError("");
+    setPinError("");
+    setConfirmedTransaction(null);
   }
 
   // ── Slide animation variants ───────────────────────────────────────────────
@@ -451,7 +496,7 @@ export default function TransfersPage() {
                   </p>
                   <div className="relative flex items-center justify-center gap-2">
                     <span className="text-2xl font-display font-bold text-primary">
-                      GH₵
+                      GHGHS
                     </span>
                     <input
                       type="number"
@@ -598,7 +643,7 @@ export default function TransfersPage() {
                     {[
                       {
                         label: "Transaction Fee",
-                        value: "GH₵ 0.00",
+                        value: "GHGHS 0.00",
                         highlight: false,
                       },
                       {
@@ -631,6 +676,32 @@ export default function TransfersPage() {
                   </div>
                 </div>
 
+                <div>
+                  <label
+                    className="block text-xs font-medium text-muted-foreground mb-1.5"
+                    htmlFor="transfer-pin"
+                  >
+                    Demo PIN
+                  </label>
+                  <input
+                    id="transfer-pin"
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="1234"
+                    value={pin}
+                    onChange={(e) => {
+                      setPin(e.target.value.replace(/\D/g, ""));
+                      setPinError("");
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl bg-muted/30 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-smooth tracking-widest"
+                    data-ocid="transfers.pin_input"
+                  />
+                  {pinError && (
+                    <p className="mt-1 text-xs text-destructive">{pinError}</p>
+                  )}
+                </div>
+
                 <div className="flex gap-3">
                   <Button
                     variant="secondary"
@@ -650,7 +721,7 @@ export default function TransfersPage() {
                     data-ocid="transfers.confirm_button"
                   >
                     {!isSubmitting && <Zap className="h-4 w-4" />}
-                    {isSubmitting ? "Processing…" : "Confirm & Send"}
+                    {isSubmitting ? "Processing..." : "Confirm & Send"}
                   </Button>
                 </div>
               </CardContent>
@@ -726,7 +797,12 @@ export default function TransfersPage() {
                     </div>
                     <div className="divide-y divide-border">
                       {[
-                        { label: "Reference", value: referenceNumber },
+                        {
+                          label: "Reference",
+                          value:
+                            confirmedTransaction?.referenceNumber ??
+                            referenceNumber,
+                        },
                         { label: "Status", value: "Completed" },
                         {
                           label: "Date",
@@ -767,7 +843,9 @@ export default function TransfersPage() {
                   className="w-full"
                   onClick={() => {
                     toast.success("Receipt copied to clipboard!", {
-                      description: `Ref: ${referenceNumber}`,
+                      description: `Ref: ${
+                        confirmedTransaction?.referenceNumber ?? referenceNumber
+                      }`,
                     });
                   }}
                   data-ocid="transfers.share_receipt_button"

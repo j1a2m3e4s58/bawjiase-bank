@@ -2,6 +2,7 @@ import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { createActor } from "../backend";
+import { getMockBankState, saveMockBankState } from "../lib/mockBank";
 import { useAppStore } from "../store/useAppStore";
 import type { NotificationView } from "../types";
 
@@ -12,10 +13,11 @@ export function useNotifications() {
   const query = useQuery<NotificationView[]>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) return getMockBankState().notifications;
       return actor.getNotifications();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !isFetching,
+    initialData: () => getMockBankState().notifications,
     refetchInterval: 30_000, // poll every 30 seconds
   });
 
@@ -31,10 +33,13 @@ export function useUnreadCount() {
   return useQuery<bigint>({
     queryKey: ["unreadCount"],
     queryFn: async () => {
-      if (!actor) return 0n;
+      if (!actor)
+        return BigInt(getMockBankState().notifications.filter((n) => !n.isRead).length);
       return actor.getUnreadCount();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !isFetching,
+    initialData: () =>
+      BigInt(getMockBankState().notifications.filter((n) => !n.isRead).length),
     refetchInterval: 30_000,
   });
 }
@@ -46,7 +51,16 @@ export function useMarkNotificationRead() {
 
   return useMutation({
     mutationFn: async (notifId: bigint) => {
-      if (!actor) throw new Error("Actor not ready");
+      if (!actor) {
+        const state = getMockBankState();
+        saveMockBankState({
+          ...state,
+          notifications: state.notifications.map((n) =>
+            n.notifId === notifId ? { ...n, isRead: true } : n,
+          ),
+        });
+        return true;
+      }
       return actor.markNotificationRead(notifId);
     },
     onMutate: (notifId) => {
@@ -66,7 +80,14 @@ export function useDismissNotification() {
 
   return useMutation({
     mutationFn: async (notifId: bigint) => {
-      if (!actor) throw new Error("Actor not ready");
+      if (!actor) {
+        const state = getMockBankState();
+        saveMockBankState({
+          ...state,
+          notifications: state.notifications.filter((n) => n.notifId !== notifId),
+        });
+        return true;
+      }
       return actor.dismissNotification(notifId);
     },
     onMutate: (notifId) => {

@@ -1,13 +1,19 @@
 {
   "name": "BCB Demo",
   "short_name": "BCB Demo",
+  "id": "/",
   "description": "Demo banking prototype for testing and presentation.",
   "start_url": "/",
   "scope": "/",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "display_override": ["window-controls-overlay", "standalone"],
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
+  "background_color": "#0f1115",
   "theme_color": "#0f1115",
+  "categories": ["finance", "productivity"],
   "icons": [
     {
       "src": "/icon-192.png",

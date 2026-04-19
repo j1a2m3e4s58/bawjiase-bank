@@ -2,6 +2,7 @@ import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { AccountType, createActor } from "../backend";
+import { createMockAccount, getMockBankState } from "../lib/mockBank";
 import { useAppStore } from "../store/useAppStore";
 import type { AccountView } from "../types";
 
@@ -12,10 +13,11 @@ export function useAccounts() {
   const query = useQuery<AccountView[]>({
     queryKey: ["accounts"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) return getMockBankState().accounts;
       return actor.getMyAccounts();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !isFetching,
+    initialData: () => getMockBankState().accounts,
   });
 
   useEffect(() => {
@@ -43,10 +45,14 @@ export function useCreateAccount() {
 
   return useMutation({
     mutationFn: (accountType: AccountType) => {
-      if (!actor) throw new Error("Actor not ready");
+      if (!actor) return Promise.resolve(createMockAccount(accountType));
       return actor.createAccount(accountType);
     },
-    onSuccess: () => {
+    onSuccess: (account) => {
+      if (!actor) {
+        queryClient.setQueryData(["accounts"], getMockBankState().accounts);
+        return account;
+      }
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
     },
   });
